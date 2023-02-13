@@ -11,3 +11,8 @@ Follow step 1 and 2 to install vcpkg. Then, run the command below for assimp.
 This can be removed by simply replacing install with remove keyword.
 
 After installation, run ```./vcpkg.exe integrate install```.
+
+## Running Program
+To run the debugger in Visual Studio, make sure to set it to x64. It is not build with x86 for simplicity.
+Both Debug and Release should work and you can just click Local Windows Debugger. If everything is installed corerctly,
+it should run in both environments.
