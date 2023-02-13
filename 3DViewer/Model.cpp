@@ -172,12 +172,15 @@ unsigned int TextureFromFile(const char* path, const string& directory, bool gam
 {
     string filename = string(path);
     filename = directory + '/' + filename;
+    printf(filename.c_str());
 
     unsigned int textureID;
     glGenTextures(1, &textureID);
 
     int width, height, nrComponents;
+    //unsigned char* data = stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
     unsigned char* data = stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
+
     if (data)
     {
         GLenum format;
@@ -197,6 +200,7 @@ unsigned int TextureFromFile(const char* path, const string& directory, bool gam
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+        std::cout << "Texture loaded at path: " << path << std::endl;
         stbi_image_free(data);
     }
     else

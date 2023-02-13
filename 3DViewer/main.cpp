@@ -13,9 +13,9 @@ namespace fs = std::filesystem;
 #include "Model.h"
 #include "Camera.h"
 
-#include <imgui.h>
-#include <imgui_impl_opengl3.h>
-#include <imgui_impl_glfw.h>
+#include <imgui/imgui.h>
+#include <imgui/imgui_impl_opengl3.h>
+#include <imgui/imgui_impl_glfw.h>
 
 #include <iostream>
 
@@ -24,8 +24,8 @@ namespace fs = std::filesystem;
 using namespace glm;
 
 // Window Size
-const unsigned int width = 720;
-const unsigned int height = 720;
+const unsigned int width = 1080;
+const unsigned int height = 1080;
 
 // Create Camera Object
 Camera camera(glm::vec3(0.0f, 20.0f, 50.0f));
@@ -165,13 +165,16 @@ int main()
 		return -1;
 	}
 
+	stbi_set_flip_vertically_on_load(true);
+
 	// Enables the Depth Buffer
 	glEnable(GL_DEPTH_TEST);
 
 	// Generates Shader object using shaders default.vert and default.frag
-	Shader shaderProgram("7.4.camera.vs", "7.4.camera.fs");
+	Shader shaderProgram("vert.vs", "frag.fs");
 
 	// Take care of all the light related things
+	/*
 	glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 	glm::vec3 lightPos = glm::vec3(0.5f, 0.5f, 0.5f);
 	glm::mat4 lightModel = glm::mat4(1.0f);
@@ -179,13 +182,14 @@ int main()
 
 	glUniform4f(glGetUniformLocation(shaderProgram.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
 	glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
+	*/
 
 	// Specify the viewport of OpenGL in the Window
 	// In this case the viewport goes from x = 0, y = 0, to x = 800, y = 800
 	glViewport(0, 0, width, height);
 
 	// Load in model
-	Model pen("pen.obj", false);
+	Model pen("pen.obj", true);
 
 	// Initialize ImGUI
 	IMGUI_CHECKVERSION();
@@ -242,13 +246,13 @@ int main()
 		// ImGUI window creation
 		ImGui::Begin("3D Model Viewer");
 
-		// Text that appears in the window
-		ImGui::Text("Controls");
+		ImGui::Text("Instructions");
+		ImGui::Text("Left Click to activate camera movement on a free axis.");
+		ImGui::Text("Then use WASD to fly around object shown while holding left click.");
+		ImGui::Separator();
 
-		// Slider that appears in the window
+		ImGui::Text("Controls");
 		ImGui::Text("Scroll Wheel: Zoom");
-		ImGui::Text("Left Click to activate camera movement on a free axis");
-		ImGui::Text("Then use WASD to fly around object shown");
 		ImGui::Text("W: Pan Up");
 		ImGui::Text("A: Pan Left");
 		ImGui::Text("S: Pan Down");
