@@ -24,11 +24,12 @@ namespace fs = std::filesystem;
 using namespace glm;
 
 // Window Size
-const unsigned int width = 1080;
-const unsigned int height = 1080;
+const unsigned int width = 800;
+const unsigned int height = 800;
 
 // Create Camera Object
-Camera camera(glm::vec3(0.0f, 20.0f, 50.0f));
+Camera camera;
+
 double lastX = width / 2.0f;
 double lastY = height / 2.0f;
 bool firstMouse = true;
@@ -38,6 +39,8 @@ float lastFrame = 0.0f;
 
 // Interactions
 bool mouseLeftButtonDown = false;
+bool mouseRightButtonDown = false;
+bool isDragging = false;
 
 void processInput(GLFWwindow* window)
 {
@@ -82,21 +85,41 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 {
 	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
 	{
+		isDragging = true;
 		mouseLeftButtonDown = true;
 		glfwGetCursorPos(window, &lastX, &lastY);
+		printf("Left Button Down Pressed");
 	}
 
-	else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
+	else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
 	{
+		mouseRightButtonDown = true;
+		glfwGetCursorPos(window, &lastX, &lastY);
+		printf("Right Button Down Pressed");
+	}
+
+	else if (button == GLFW_MOUSE_BUTTON_LEFT || button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE)
+	{
+		isDragging = false;
 		mouseLeftButtonDown = false;
+		mouseRightButtonDown = false;
 	}
 }
 
 // Update mouse handler callbacks (physical movement of the mouse)
-void mouseCallback(GLFWwindow* window, double xposIn, double yposIn)
+void cursorPositionCallback(GLFWwindow* window, double xpos, double ypos)
 {
-	double xpos = xposIn;
-	double ypos = yposIn;
+	float xoffset = xpos - lastX;
+	float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+	std::cout << xoffset << " : " << yoffset << std::endl;
+
+	lastX = xpos;
+	lastY = ypos;
+
+	if (isDragging && mouseLeftButtonDown)
+	{
+		camera.Orbit(xoffset, yoffset);
+	} 
 
 	if (firstMouse)
 	{
@@ -104,24 +127,12 @@ void mouseCallback(GLFWwindow* window, double xposIn, double yposIn)
 		lastY = ypos;
 		firstMouse = false;
 	}
-
-	double xoffset = xpos - lastX;
-	double yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
-
-	lastX = xpos;
-	lastY = ypos;
-
-	// Only move camera when left clicking
-	if (mouseLeftButtonDown)
-	{
-		camera.ProcessMouseMovement(xoffset, yoffset);
-	}
 }
 
 // Update scrolling callback on the physical mouse
 void scrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
-	camera.ProcessMouseScroll(static_cast<float>(yoffset));
+	camera.Zoom(yoffset);
 	printf("SCROLLING MOUSE \n");
 }
 
@@ -153,7 +164,7 @@ int main()
 	glfwMakeContextCurrent(window);
 	glfwSetFramebufferSizeCallback(window, resizeWindowCallback);
 	glfwSetMouseButtonCallback(window, mouseButtonCallback);
-	glfwSetCursorPosCallback(window, mouseCallback);
+	glfwSetCursorPosCallback(window, cursorPositionCallback);
 	glfwSetScrollCallback(window, scrollCallback);
 
 	//Load GLAD so it configures OpenGL
@@ -165,45 +176,45 @@ int main()
 		return -1;
 	}
 
-	stbi_set_flip_vertically_on_load(true);
-
-	// Enables the Depth Buffer
-	glEnable(GL_DEPTH_TEST);
-
-	// Generates Shader object using shaders default.vert and default.frag
-	Shader shaderProgram("vert.vs", "frag.fs");
-
-	// Take care of all the light related things
-	/*
-	glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-	glm::vec3 lightPos = glm::vec3(0.5f, 0.5f, 0.5f);
-	glm::mat4 lightModel = glm::mat4(1.0f);
-	lightModel = glm::translate(lightModel, lightPos);
-
-	glUniform4f(glGetUniformLocation(shaderProgram.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
-	glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
-	*/
-
-	// Specify the viewport of OpenGL in the Window
-	// In this case the viewport goes from x = 0, y = 0, to x = 800, y = 800
-	glViewport(0, 0, width, height);
-
-	// Load in model
-	Model pen("pen.obj", true);
-
 	// Initialize ImGUI
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	ImGui::StyleColorsDark();
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
-	ImGui_ImplOpenGL3_Init("#version 330");
+	ImGui_ImplOpenGL3_Init("#version 430");
 
-	// Set up the projection matrix
-	glm::mat4 projection = perspective(radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+	stbi_set_flip_vertically_on_load(true);
 
-	// Set up the view matrix
-	glm::mat4 view = lookAt(vec3(0.0f, 0.0f, 5.0f), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
+	// Specify the viewport of OpenGL in the Window
+	// In this case the viewport goes from x = 0, y = 0, to x = 800, y = 800
+	glViewport(0, 0, width, height);
+
+	// Enables the Depth Buffer
+	glEnable(GL_DEPTH_TEST);
+
+	// Load the shaders
+	Shader shaderProgram("vert.glsl", "frag.glsl");
+	shaderProgram.use();
+
+	// Load in model
+	Model pen("models/pen.obj", true);
+
+	// Build model matrix
+	glm::mat4 model = glm::mat4(1.0f);
+	glm::vec3 model_translate_vec = glm::vec3(0.0, 0.0, 0.0);
+	glm::vec3 model_scale = glm::vec3(1.0, 1.0, 1.0);
+	float model_rotate_angle = glm::radians(0.0);
+
+	glm::vec3 model_rotate_axis = glm::vec3(1.0, 0.0, 0.0);
+
+	model = glm::translate(model, model_translate_vec);
+	model = glm::scale(model, model_scale);
+	model = glm::rotate(model, model_rotate_angle, model_rotate_axis);
+
+	// Send model matrix to vertex shader as it remains constant
+	shaderProgram.use();
+	shaderProgram.setMat4("model", model);
 
 	// Log some messages
 	printf("OpenGL version: %s\n", glGetString(GL_VERSION));
@@ -223,20 +234,18 @@ int main()
 
 		// Render
 		// Specify the color of the background
-		glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
+		glClearColor(1.0f, 1.0f,1.0f, 1.0f);
 
 		// Clean the back buffer and depth buffer
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		// Set the view and projection matrices
+		shaderProgram.setMat4("view", camera.GetViewMatrix());
+		shaderProgram.setMat4("projection", camera.GetProjectionMatrix());
+
 		shaderProgram.use();
 
-		// pass projection matrix to shader (note that in this case it could change every frame)
-		glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)width / (float)height, 0.1f, 100.0f);
-		shaderProgram.setMat4("projection", projection);
-
-		// camera/view transformation
-		glm::mat4 view = camera.GetViewMatrix();
-		shaderProgram.setMat4("view", view);
+		pen.Draw(shaderProgram);
 
 		// Tell OpenGL a new frame is about to begin
 		ImGui_ImplOpenGL3_NewFrame();
@@ -244,32 +253,36 @@ int main()
 		ImGui::NewFrame();
 
 		// ImGUI window creation
-		ImGui::Begin("3D Model Viewer");
+		if (ImGui::BeginMainMenuBar())
+		{
+			if (ImGui::BeginMenu("File"))
+			{
+				ImGui::MenuItem("Import...");
+				ImGui::EndMenu();
+			}
+		}
+		ImGui::EndMainMenuBar();
 
-		ImGui::Text("Instructions");
-		ImGui::Text("Left Click to activate camera movement on a free axis.");
-		ImGui::Text("Then use WASD to fly around object shown while holding left click.");
-		ImGui::Separator();
-
+		ImGui::SetNextWindowSizeConstraints(ImVec2(width, 100), ImVec2(FLT_MAX, 100));
+		ImGui::SetNextWindowPos(ImVec2(0, 18));
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.5f);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+		ImGui::Begin("Instructions", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBringToFrontOnFocus);
+		
+		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(30, 30)); // Set equal padding on left and top
+		
+		ImGui::SetWindowFontScale(1.2f);
 		ImGui::Text("Controls");
-		ImGui::Text("Scroll Wheel: Zoom");
-		ImGui::Text("W: Pan Up");
-		ImGui::Text("A: Pan Left");
-		ImGui::Text("S: Pan Down");
-		ImGui::Text("D: Pan Right");
+		ImGui::PopStyleVar();
 
-		//ImGui::ShowDemoWindow();
+		ImGui::Indent(); // Add bullet points
+		ImGui::BulletText("Scroll to Zoom");
+		ImGui::BulletText("Left Click to spin model");
+		ImGui::Unindent();
 
-		// Ends the window
 		ImGui::End();
-
-		// render the loaded model
-		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
-		model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
-		shaderProgram.setMat4("model", model);
-
-		pen.Draw(shaderProgram);
+		ImGui::PopStyleVar(3);
 
 		// Renders the ImGUI elements
 		ImGui::Render();

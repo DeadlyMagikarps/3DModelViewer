@@ -177,8 +177,8 @@
     <ClInclude Include="VBO.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="frag.fs" />
-    <None Include="vert.vs" />
+    <None Include="frag.glsl" />
+    <None Include="vert.glsl" />
     <None Include="default.fs" />
     <None Include="default.vs" />
   </ItemGroup>

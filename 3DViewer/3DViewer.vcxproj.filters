@@ -133,10 +133,10 @@
     <None Include="default.vs">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="frag.fs">
+    <None Include="frag.glsl">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="vert.vs">
+    <None Include="vert.glsl">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>
