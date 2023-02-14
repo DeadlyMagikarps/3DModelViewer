@@ -234,7 +234,7 @@ int main()
 
 		// Render
 		// Specify the color of the background
-		glClearColor(1.0f, 1.0f,1.0f, 1.0f);
+		glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 
 		// Clean the back buffer and depth buffer
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -265,9 +265,9 @@ int main()
 
 		ImGui::SetNextWindowSizeConstraints(ImVec2(width, 100), ImVec2(FLT_MAX, 100));
 		ImGui::SetNextWindowPos(ImVec2(0, 18));
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.5f);
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f)); // set text color to black
+		ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.0f, 0.0f, 0.0f, 0.0f)); // set window background color to transparent
 		ImGui::Begin("Instructions", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBringToFrontOnFocus);
 		
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(30, 30)); // Set equal padding on left and top
@@ -282,7 +282,8 @@ int main()
 		ImGui::Unindent();
 
 		ImGui::End();
-		ImGui::PopStyleVar(3);
+		ImGui::PopStyleVar(1);
+		ImGui::PopStyleColor(2);
 
 		// Renders the ImGUI elements
 		ImGui::Render();
